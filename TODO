@@ -1,0 +1,3 @@
+The bi-index should have a more efficient storage mechanism.
+
+I haven't really tested anything other than the MLDBM storage.

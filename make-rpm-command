@@ -1,5 +1,7 @@
 make clean
 perl Makefile.PL
+make clean
+perl Makefile.PL
 ID=`id -u`;
 if [ x"$ID" != x"0" ]
 then
@@ -7,11 +9,12 @@ then
         export MAKERPMOPTS
 fi
 
-DISTFILE=CDB_File-Generator-0.006.tar.gz
+DISTFILE=CDB_File-BiIndex-0.017.tar.gz
 rm $DISTFILE
 make
 make dist
 cp $DISTFILE /usr/src/redhat/SOURCES
 /usr/src/redhat/SOURCES/makerpm.pl $MAKERPMOPTS --specs --runtests --auto-desc --source=$DISTFILE
 cd /usr/src/redhat
-rpm -ba SPECS/CDB_File-Generator-0.006.spec
+rpm -ba SPECS/CDB_File-BiIndex-0.017.spec
+
