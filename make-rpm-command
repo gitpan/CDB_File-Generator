@@ -7,11 +7,11 @@ then
         export MAKERPMOPTS
 fi
 
-DISTFILE=CDB_File-Generator-0.018.tar.gz
+DISTFILE=CDB_File-Generator-0.030.tar.gz
 rm $DISTFILE
 make
 make dist
 cp $DISTFILE /usr/src/redhat/SOURCES
 /usr/src/redhat/SOURCES/makerpm.pl $MAKERPMOPTS --specs --runtests --auto-desc --source=$DISTFILE
 cd /usr/src/redhat
-rpm -ba SPECS/CDB_File-Generator-0.018.spec
+rpm -ba SPECS/CDB_File-Generator-0.030.spec

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-BEGIN {print "1..7\n"}
+BEGIN {print "1..12\n"}
 END {print "not ok 1\n" unless $loaded;}
 
 use Carp;
@@ -33,7 +33,7 @@ ok(1);
 
 
 while (@keyval) {
-  ($key, $value, @keyval) = @keyval;
+  my ($key, $value) = splice (@keyval, 0 , 2);
   $gen->add($key,$value);
 }
 
@@ -62,10 +62,52 @@ use vars qw($a);
 $a = scalar keys %test_hash;
 my ($key, $value);
 while ( ($key, $value) = each %test_hash ){
-  (my ($ckey, $cvalue), @checkval) = @checkval;
+  my ($ckey, $cvalue) = splice (@checkval, 0, 2);
   unless ($key eq $ckey and $value eq $cvalue) {
     print "not ";
     last;
   }
 }
 ok(7);
+
+#unlink any existing my.cdb
+(! (-e "your.cdb") or unlink "your.cdb")
+   or die "Couldn't get rid of the existing database your.cdb";
+$gen2 = new CDB_File::Generator "your.cdb" or nogo;
+
+ok(8);
+
+@keyval2 =
+  ( "aa" => "second",
+    "a." => "first",
+  );
+
+@checkval2 =
+  ( "a." => "first",
+    "aa" => "second",
+  );
+
+while (@keyval2) {
+  my ($key, $value) = splice (@keyval2, 0 , 2);
+  $gen2->add($key,$value);
+}
+
+ok(9);
+$gen2->finish;
+undef $gen2;
+-e 'my.cdb' or nogo;
+ok(10);
+
+use vars qw($tst2);
+
+$tst2 = tie %test_hash2, "CDB_File", "your.cdb" or nogo;
+ok(11);
+
+while ( my ($key, $value) = each %test_hash2 ){
+  my ($ckey, $cvalue) = splice (@checkval2, 0, 2);
+  unless ($key eq $ckey and $value eq $cvalue) {
+    print "not ";
+    last;
+  }
+}
+ok(12);

@@ -3,6 +3,7 @@
 ^MANIFEST\.[Bb]
 ^Makefile$
 ~$
+\.cdb$
 \.old$
 \.tar.gz$
 \.mikeonly$

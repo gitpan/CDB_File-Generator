@@ -1,6 +1,7 @@
 package CDB_File::Generator;
+$REVISION=q$Revision: 1.13 $ ;
 use vars qw($VERSION);
-$VERSION=0.018;
+$VERSION='0.030';
 
 =head1 NAME
 
@@ -17,7 +18,7 @@ CDB_File::Generator - generate massive sorted CDB files simply.
   $gen->("Roger", "Jenny");
   $gen = undef;
   use CDB_File;
-  
+
 
 =head1 DESCRIPTION
 
@@ -25,7 +26,6 @@ This is a class which makes generating sorted large (much bigger than
 memory, but the speed will depend on the efficiency of your sort
 command.  If you haven't got one, for example, it won't work at all.)
 CDB files on the fly very easy
-
 
 =cut
 
@@ -88,7 +88,6 @@ sub add ($$$) {
   $value =~ s,\n,\\n,g;
   $value =~ s,\t,\\t,g; # ....
 
-
   print $fh $key, "\t", $value, "\n";
 
   $self->{"added"} ++;
@@ -106,7 +105,9 @@ finish method which ends the CDB creation.  See below.
 sub DESTROY ($) {
   my $self=shift;
   $self->{"added"} && $self->finish() unless $self->{"abort"};
-  unlink $self->{"tmpoutfile"}, $self->{"tmpsortfile"};
+  foreach my $del ( "tmpoutfile", "tmpsortfile", "tmpmakefile") {
+      unlink $self->{$del};
+  }
 }
 
 =head2 finish
@@ -118,14 +119,34 @@ to complete the creation job.
 In the current implementation this uses C<sort -u> and deletes repeats of
 the same key with the same value.
 
+In order to increase database portability, by default all sorting is
+done in the 'C' locale, even if the current program is working in
+another locale.  This is "the right thing" in many cases.  Where you
+are dealing with real word keys it won't be the right thing.  In this case, use the locale function to set the locale.
+
 =cut
+
+sub locale ($) {
+  my $self=shift;
+  my $locale=shift;
+  $self->{locale}=$locale;
+}
 
 sub finish ($) {
   my $self=shift;
   close $self->{"fh"};
-  system 'sort' , '-u', '-o' ,$self->{"tmpsortfile"} , $self->{"tmpoutfile"};
 
-  my $fh = new IO::File $self->{"tmpsortfile"} 
+  {
+    local $ENV{LC_ALL};
+    if ($self->{locale}) {
+      $ENV{LC_ALL}=$self->{locale};
+    } else {
+      $ENV{LC_ALL}='C';
+    }
+    system 'sort' , '-u', '-o' ,$self->{"tmpsortfile"} , $self->{"tmpoutfile"};
+  }
+
+  my $fh = new IO::File $self->{"tmpsortfile"}
     or die "couldn't open sorted output file";
 
   my $cdbmakeout = new IO::File ( '|cdbmake ' .  $self->{"cdbfile"} 
@@ -155,7 +176,9 @@ sub finish ($) {
 
 #  $self->{"abort"} = 1;
   #FIXME return codes etc..
-
+  unlink $self->{"tmpsortfile"} , $self->{"tmpoutfile"}
+  or warn "trouble deleting temp files "
+    . $self->{"tmpsortfile"} . $self->{"tmpoutfile"};
   $self->{"added"} = 0;
 }
 
